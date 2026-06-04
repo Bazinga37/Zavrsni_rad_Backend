@@ -85,7 +85,7 @@ public class GameService {
         session.setAcceptingAnswers(true);
         session.getPlayersWhoAnswered().clear();
 
-        Map<String, Object> roundDto = Map.of(
+        var roundDto = Map.of(
                 "type", ServerMessage.MessageType.QUESTION,
                 "question", question.getText(),
                 "answers", answersDto,
@@ -163,7 +163,7 @@ public class GameService {
                 .map(Answer::getAnswerId)
                 .orElse(-1L);
 
-        Map<String, Object> results = Map.of(
+        var results = Map.of(
                 "type", ServerMessage.MessageType.ROUND_RESULT,
                 "playerOne", session.getPlayerOneUsername(),
                 "playerTwo", session.getPlayerTwoUsername(),
