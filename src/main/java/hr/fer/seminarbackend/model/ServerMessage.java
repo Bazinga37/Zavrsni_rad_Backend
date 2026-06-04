@@ -15,10 +15,10 @@ public class ServerMessage<T> {
         GAME_START,
         ERROR,
 
-        // future
         QUESTION,
         ROUND_RESULT,
-        GAME_END
+        GAME_END,
+        REJOIN_OK
     }
 
     private MessageType type;

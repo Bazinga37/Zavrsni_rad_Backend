@@ -3,6 +3,7 @@ package hr.fer.seminarbackend.handler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hr.fer.seminarbackend.model.*;
 import hr.fer.seminarbackend.model.payloads.ErrorPayload;
+import hr.fer.seminarbackend.model.payloads.GameStartPayload;
 import hr.fer.seminarbackend.model.payloads.JoinOkPayload;
 import hr.fer.seminarbackend.model.payloads.LobbyStatePayload;
 import hr.fer.seminarbackend.service.GameService;
@@ -140,7 +141,8 @@ public class ConnectHandler implements MessageHandler {
         tagSession(activeSession.getPlayerTwoSession(), activeSession.getGameId(), activeSession.getPlayerTwoId());
         tagSession(activeSession.getScreenSession(), activeSession.getGameId(), null);
 
-        var message = new ServerMessage<>(ServerMessage.MessageType.GAME_START, null);
+        var message = new ServerMessage<>(ServerMessage.MessageType.GAME_START,
+                new GameStartPayload(activeSession.getGameId()));
 
         send(activeSession.getScreenSession(), message);
         send(activeSession.getPlayerOneSession(), message);

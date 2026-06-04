@@ -95,6 +95,9 @@ public class GameService {
                 "index", session.getCurrentQuestionIndex() + 1
         );
 
+        session.setLastQuestionBroadcast(roundDto);
+        session.setLastRoundResultBroadcast(null);
+
         broadcastToGame(gameId, roundDto);
 
         long activationDelayMs = 5000;
@@ -168,6 +171,7 @@ public class GameService {
                 "scoreTwo", session.getScoreTwo(),
                 "correctAnswerId", correctAnswerId
         );
+        session.setLastRoundResultBroadcast(results);
         broadcastToGame(session.getGameId(), results);
 
         session.setCurrentQuestionIndex(session.getCurrentQuestionIndex() + 1);
@@ -177,6 +181,7 @@ public class GameService {
     public void handleNextQuestionRequest(Long gameId) {
         ActiveGameSession session = activeGames.get(gameId);
         if (session == null) return;
+        if (session.isAcceptingAnswers()) return;
 
         if (session.getCurrentQuestionIndex() < session.getQuestions().size()) {
             startNextQuestion(gameId);
@@ -196,12 +201,78 @@ public class GameService {
         if (session == null) return;
         try {
             TextMessage message = new TextMessage(mapper.writeValueAsString(payload));
-            if (session.getPlayerOneSession().isOpen()) session.getPlayerOneSession().sendMessage(message);
-            if (session.getPlayerTwoSession().isOpen()) session.getPlayerTwoSession().sendMessage(message);
-            if (session.getScreenSession().isOpen()) session.getScreenSession().sendMessage(message);
+            WebSocketSession p1 = session.getPlayerOneSession();
+            WebSocketSession p2 = session.getPlayerTwoSession();
+            WebSocketSession sc = session.getScreenSession();
+            if (p1 != null && p1.isOpen()) p1.sendMessage(message);
+            if (p2 != null && p2.isOpen()) p2.sendMessage(message);
+            if (sc != null && sc.isOpen()) sc.sendMessage(message);
         } catch (Exception e){
             System.err.println("Failed to broadcast to game " + gameId);
         }
+    }
+
+    public void rejoinPlayer(Long gameId, String username, WebSocketSession newSession) {
+        ActiveGameSession session = activeGames.get(gameId);
+        if (session == null) {
+            sendErrorToSession(newSession, "Game not found");
+            return;
+        }
+
+        Long playerId;
+        if (session.getPlayerOneUsername().equalsIgnoreCase(username)) {
+            session.setPlayerOneSession(newSession);
+            playerId = session.getPlayerOneId();
+        } else if (session.getPlayerTwoUsername().equalsIgnoreCase(username)) {
+            session.setPlayerTwoSession(newSession);
+            playerId = session.getPlayerTwoId();
+        } else {
+            sendErrorToSession(newSession, "Player not in this game");
+            return;
+        }
+
+        newSession.getAttributes().put("GAME_ID", gameId);
+        newSession.getAttributes().put("PLAYER_ID", playerId);
+
+        sendToSession(newSession, new ServerMessage<>(ServerMessage.MessageType.REJOIN_OK, null));
+        resendGameState(session, newSession);
+    }
+
+    public void rejoinScreen(Long gameId, WebSocketSession newSession) {
+        ActiveGameSession session = activeGames.get(gameId);
+        if (session == null) {
+            sendErrorToSession(newSession, "Game not found");
+            return;
+        }
+
+        session.setScreenSession(newSession);
+        newSession.getAttributes().put("GAME_ID", gameId);
+
+        sendToSession(newSession, new ServerMessage<>(ServerMessage.MessageType.REJOIN_OK, null));
+        resendGameState(session, newSession);
+    }
+
+    private void resendGameState(ActiveGameSession session, WebSocketSession target) {
+        if (session.isAcceptingAnswers() && session.getLastQuestionBroadcast() != null) {
+            sendToSession(target, session.getLastQuestionBroadcast());
+        } else if (!session.isAcceptingAnswers() && session.getLastRoundResultBroadcast() != null) {
+            sendToSession(target, session.getLastRoundResultBroadcast());
+        }
+    }
+
+    private void sendToSession(WebSocketSession session, Object payload) {
+        try {
+            if (session != null && session.isOpen()) {
+                session.sendMessage(new TextMessage(mapper.writeValueAsString(payload)));
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to send to session " + (session != null ? session.getId() : "null") + ": " + e.getMessage());
+        }
+    }
+
+    private void sendErrorToSession(WebSocketSession session, String message) {
+        sendToSession(session, new ServerMessage<>(ServerMessage.MessageType.ERROR,
+                Map.of("message", message)));
     }
 
     @Transactional

@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/player")
+@RequestMapping("/player")//svi endpointovi zapocinju sa /player
 @RequiredArgsConstructor
 public class PlayerController {
     private final PlayerService service;

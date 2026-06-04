@@ -8,13 +8,13 @@ import org.springframework.web.socket.config.annotation.*;
 @Configuration
 @EnableWebSocket
 @RequiredArgsConstructor
-public class WebSocketConfig implements WebSocketConfigurer {
+    public class WebSocketConfig implements WebSocketConfigurer {
 
     private final GameWebSocketHandler gameWebSocketHandler;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(gameWebSocketHandler, "/ws")
+        registry.addHandler(gameWebSocketHandler,"/ws")
                 .setAllowedOriginPatterns("*");
     }
 }

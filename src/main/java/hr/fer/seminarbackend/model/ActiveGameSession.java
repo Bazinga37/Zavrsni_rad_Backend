@@ -7,6 +7,7 @@ import org.springframework.web.socket.WebSocketSession;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,6 +34,9 @@ public class ActiveGameSession {
     private boolean acceptingAnswers = false;
 
     private final Set<Long> playersWhoAnswered = ConcurrentHashMap.newKeySet();
+
+    private Map<String, Object> lastQuestionBroadcast;
+    private Map<String, Object> lastRoundResultBroadcast;
 
     public ActiveGameSession(Game game,
                              WebSocketSession playerOneSession,
