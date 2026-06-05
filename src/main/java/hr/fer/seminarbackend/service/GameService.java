@@ -143,8 +143,23 @@ public class GameService {
             }
 
             if (session.getPlayersWhoAnswered().size() == 2) {
+                // Guarantee a minimum answering window so the second player's UI
+                // is not frozen if the first player answers the instant buttons appear.
+                long minimumWindowMs = 2000L;
+                long elapsed = now - session.getQuestionStartTime();
+                long delay = Math.max(0L, minimumWindowMs - elapsed);
+
                 cancelTimer(gameId);
-                endRound(session);
+                if (delay == 0L) {
+                    endRound(session);
+                } else {
+                    ScheduledFuture<?> minWindowTask = scheduler.schedule(() -> {
+                        if (session.isAcceptingAnswers()) {
+                            endRound(session);
+                        }
+                    }, delay, TimeUnit.MILLISECONDS);
+                    activeTimers.put(gameId, minWindowTask);
+                }
             }
         }
     }
