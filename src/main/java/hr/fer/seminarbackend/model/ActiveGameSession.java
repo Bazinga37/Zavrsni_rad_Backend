@@ -34,6 +34,7 @@ public class ActiveGameSession {
     private boolean acceptingAnswers = false;
 
     private final Set<Long> playersWhoAnswered = ConcurrentHashMap.newKeySet();
+    private final Map<Long, Long> playerAnswers = new ConcurrentHashMap<>();
 
     private Map<String, Object> lastQuestionBroadcast;
     private Map<String, Object> lastRoundResultBroadcast;

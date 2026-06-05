@@ -17,6 +17,7 @@ import org.springframework.web.socket.WebSocketSession;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -84,6 +85,7 @@ public class GameService {
         session.setQuestionStartTime(activationTime);
         session.setAcceptingAnswers(true);
         session.getPlayersWhoAnswered().clear();
+        session.getPlayerAnswers().clear();
 
         Map<String, Object> roundDto = Map.of(
                 "type", ServerMessage.MessageType.QUESTION,
@@ -102,10 +104,7 @@ public class GameService {
 
         long activationDelayMs = 5000;
         long questionDurationMs = question.getDuration() * 1000L;
-
-        long gracePeriod = 5000;
-
-        long totalWaitTimeMs = activationDelayMs + questionDurationMs + gracePeriod;
+        long totalWaitTimeMs = activationDelayMs + questionDurationMs;
 
         ScheduledFuture<?> timeoutTask = scheduler.schedule(() -> {
             forceRoundEnd(gameId);
@@ -124,6 +123,7 @@ public class GameService {
         if (reactionTime < 0) return;
 
         if (session.getPlayersWhoAnswered().add(playerId)) {
+            session.getPlayerAnswers().put(playerId, answerId);
             Answer answer = answerRepository.findById(answerId).orElse(null);
             if (answer == null) return;
 
@@ -235,8 +235,11 @@ public class GameService {
         newSession.getAttributes().put("PLAYER_ID", playerId);
 
         boolean alreadyAnswered = session.getPlayersWhoAnswered().contains(playerId);
-        sendToSession(newSession, new ServerMessage<>(ServerMessage.MessageType.REJOIN_OK,
-                Map.of("alreadyAnswered", alreadyAnswered)));
+        Long selectedAnswerId = session.getPlayerAnswers().get(playerId);
+        Map<String, Object> rejoinPayload = new HashMap<>();
+        rejoinPayload.put("alreadyAnswered", alreadyAnswered);
+        rejoinPayload.put("selectedAnswerId", selectedAnswerId);
+        sendToSession(newSession, new ServerMessage<>(ServerMessage.MessageType.REJOIN_OK, rejoinPayload));
         resendGameState(session, newSession);
     }
 
