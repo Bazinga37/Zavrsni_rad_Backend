@@ -74,7 +74,7 @@ public class ConnectHandler implements MessageHandler {
             }
 
             if (lobby.isStarted()) {
-                send(session, new ServerMessage<>(ServerMessage.MessageType.ERROR, new ErrorPayload("Game already started")));
+                send(session, new ServerMessage<>(ServerMessage.MessageType.ERROR, new ErrorPayload("Game is already in progress")));
                 session.close(CloseStatus.BAD_DATA);
                 return;
             }
