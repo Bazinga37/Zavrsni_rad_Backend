@@ -80,8 +80,12 @@ public class GameService {
                     return answerDto;
                 }).collect(Collectors.toList());
 
-        long activationDelay = 5000;
-        long activationTime = System.currentTimeMillis() + activationDelay;
+        // countdownMs must match the 5-second hardcoded frontend CountdownComponent.
+        // readingPhaseMs is the window after the countdown where the question is shown
+        // before answer buttons activate. activationTime is the moment answering opens.
+        long countdownMs = 5000;
+        long readingPhaseMs = 5000;
+        long activationTime = System.currentTimeMillis() + countdownMs + readingPhaseMs;
         session.setQuestionStartTime(activationTime);
         session.setAcceptingAnswers(true);
         session.getPlayersWhoAnswered().clear();
@@ -93,7 +97,7 @@ public class GameService {
                 "answers", answersDto,
                 "duration", question.getDuration(),
                 "activationTime", activationTime,
-                "activationDelay", activationDelay,
+                "activationDelay", readingPhaseMs,
                 "index", session.getCurrentQuestionIndex() + 1
         );
 
@@ -102,9 +106,8 @@ public class GameService {
 
         broadcastToGame(gameId, roundDto);
 
-        long activationDelayMs = 5000;
         long questionDurationMs = question.getDuration() * 1000L;
-        long totalWaitTimeMs = activationDelayMs + questionDurationMs;
+        long totalWaitTimeMs = countdownMs + readingPhaseMs + questionDurationMs;
 
         ScheduledFuture<?> timeoutTask = scheduler.schedule(() -> {
             forceRoundEnd(gameId);
