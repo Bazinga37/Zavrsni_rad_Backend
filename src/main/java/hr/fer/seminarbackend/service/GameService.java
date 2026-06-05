@@ -234,7 +234,9 @@ public class GameService {
         newSession.getAttributes().put("GAME_ID", gameId);
         newSession.getAttributes().put("PLAYER_ID", playerId);
 
-        sendToSession(newSession, new ServerMessage<>(ServerMessage.MessageType.REJOIN_OK, null));
+        boolean alreadyAnswered = session.getPlayersWhoAnswered().contains(playerId);
+        sendToSession(newSession, new ServerMessage<>(ServerMessage.MessageType.REJOIN_OK,
+                Map.of("alreadyAnswered", alreadyAnswered)));
         resendGameState(session, newSession);
     }
 
@@ -255,8 +257,14 @@ public class GameService {
     private void resendGameState(ActiveGameSession session, WebSocketSession target) {
         if (session.isAcceptingAnswers() && session.getLastQuestionBroadcast() != null) {
             sendToSession(target, session.getLastQuestionBroadcast());
-        } else if (!session.isAcceptingAnswers() && session.getLastRoundResultBroadcast() != null) {
-            sendToSession(target, session.getLastRoundResultBroadcast());
+        } else if (!session.isAcceptingAnswers()) {
+            // Send question first so the frontend can render it, then send the result on top.
+            if (session.getLastQuestionBroadcast() != null) {
+                sendToSession(target, session.getLastQuestionBroadcast());
+            }
+            if (session.getLastRoundResultBroadcast() != null) {
+                sendToSession(target, session.getLastRoundResultBroadcast());
+            }
         }
     }
 
