@@ -6,9 +6,11 @@ import org.springframework.web.socket.WebSocketSession;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Getter
 public class Lobby {
+    private final String pin = String.format("%05d", ThreadLocalRandom.current().nextInt(100_000));
     @Setter
     private WebSocketSession screen;
     private final List<PlayerSlot> players = new ArrayList<>(2);

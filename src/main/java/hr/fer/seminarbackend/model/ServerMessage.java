@@ -18,7 +18,8 @@ public class ServerMessage<T> {
         QUESTION,
         ROUND_RESULT,
         GAME_END,
-        REJOIN_OK
+        REJOIN_OK,
+        PIN_OK
     }
 
     private MessageType type;

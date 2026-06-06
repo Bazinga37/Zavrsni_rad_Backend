@@ -6,6 +6,7 @@ import hr.fer.seminarbackend.model.payloads.ErrorPayload;
 import hr.fer.seminarbackend.model.payloads.GameStartPayload;
 import hr.fer.seminarbackend.model.payloads.JoinOkPayload;
 import hr.fer.seminarbackend.model.payloads.LobbyStatePayload;
+import hr.fer.seminarbackend.model.payloads.ScreenOkPayload;
 import hr.fer.seminarbackend.service.GameService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -42,14 +43,16 @@ public class ConnectHandler implements MessageHandler {
     }
 
     private void handleScreenConnect(WebSocketSession session) throws Exception {
+        String pin;
         synchronized (state.getLock()) {
             if (state.getLobby() == null) {
                 state.setLobby(new Lobby());
             }
             state.getLobby().setScreen(session);
+            pin = state.getLobby().getPin();
         }
 
-        send(session, new ServerMessage<>(ServerMessage.MessageType.SCREEN_OK, null));
+        send(session, new ServerMessage<>(ServerMessage.MessageType.SCREEN_OK, new ScreenOkPayload(pin)));
         notifyLobbyStateToScreen();
     }
 
