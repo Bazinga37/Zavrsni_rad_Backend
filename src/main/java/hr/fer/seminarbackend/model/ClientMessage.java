@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ClientMessage {
     public enum Role { SCREEN, PLAYER }
-    public enum MessageType { CONNECT, LOBBY, ANSWER, NEXT_QUESTION, REJOIN, VALIDATE_PIN }
+    public enum MessageType { CONNECT, ANSWER, NEXT_QUESTION, REJOIN, VALIDATE_PIN }
 
     Role role;
     MessageType messageType;

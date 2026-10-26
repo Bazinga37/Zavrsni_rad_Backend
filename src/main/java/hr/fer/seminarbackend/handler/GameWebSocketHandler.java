@@ -1,6 +1,6 @@
 package hr.fer.seminarbackend.handler;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import hr.fer.seminarbackend.model.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

@@ -1,9 +1,7 @@
 package hr.fer.seminarbackend.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import hr.fer.seminarbackend.mapper.AnswerMapper;
+import tools.jackson.databind.ObjectMapper;
 import hr.fer.seminarbackend.model.*;
-import hr.fer.seminarbackend.model.DTO.AnswerDto;
 import hr.fer.seminarbackend.repository.AnswerRepository;
 import hr.fer.seminarbackend.repository.GameRepository;
 import hr.fer.seminarbackend.repository.QuestionRepository;
@@ -30,7 +28,6 @@ public class GameService {
     private final PlayerService playerService;
     private final QuestionRepository questionRepository;
     private final AnswerRepository answerRepository;
-    private final AnswerMapper answerMapper;
     private final ObjectMapper mapper;
 
     private final Map<Long, ActiveGameSession> activeGames = new ConcurrentHashMap<>();
@@ -73,12 +70,9 @@ public class GameService {
         List<Answer> answers = new ArrayList<>(answerRepository.findAllByQuestion(question));
         Collections.shuffle(answers);
 
-        List<AnswerDto> answersDto = answers.stream()
-                .map(answer -> {
-                    AnswerDto answerDto = answerMapper.toAnswerDto(answer);
-                    answerDto.setCorrect(null);
-                    return answerDto;
-                }).collect(Collectors.toList());
+        List<Map<String, Object>> answersDto = answers.stream()
+                .map(answer -> Map.<String, Object>of("answerId", answer.getAnswerId(), "content", answer.getContent()))
+                .collect(Collectors.toList());
 
         // countdownMs must match the 5-second hardcoded frontend CountdownComponent.
         // readingPhaseMs is the window after the countdown where the question is shown
